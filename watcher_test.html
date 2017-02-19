@@ -1,0 +1,52 @@
+<html>
+<head>
+	<script>
+var watcher = {};
+
+var url = 'https://api.stackexchange.com/2.2/';
+var questionAnswerUrlAppend = '?site=stackoverflow';
+
+function addWatcher(userId, questionId) {
+	watcher[[userId, questionId]] = getLastActivityTime(questionId);
+}
+
+function getLastActivityTime(questionId) {
+	var questionUrl = url + '/questions/' + questionId + questionAnswerUrlAppend;
+
+    client.registerMethod("jsonMethod", questionUrl, "GET");
+    client.methods.jsonMethod(function (data, response) {
+    	var lastActivityDate = data.items[0].last_activity_date;
+        console.log("Last Activity Date - " + lastActivityDate); 
+    });
+}
+
+function startWatcher() {
+	while(true){
+		sleep(5000, checkForUpdates);
+	}
+}
+
+function checkForUpdates() {
+	for(toWatchObj in watcher){
+			currentTime = watcher[toWatchObj];
+			var questionId = toWatchObj[0];
+			var newTime = getLastActivityTime(questionId);
+
+			if (newTime > currentTime){
+				//send via bot and update the time in map
+				watcher[questionId] =  newTime;
+			}
+
+		}
+
+}
+
+function sleep(millis, callback) {
+    setTimeout(function()
+            { callback(); }
+    , milliseconds);
+}
+
+</script>
+</head>
+</html>
