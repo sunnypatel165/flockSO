@@ -21,4 +21,4 @@ https://api.stackexchange.com/2.2/questions/20086784/answers?site=stackoverflow&
 
 
 
-/SO ask java how to read file
+/so ask java how to read file
