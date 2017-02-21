@@ -42,7 +42,7 @@ function checkForUpdates(callback) {
 
 		console.log("Current known last activity time: " + currentTime);
 
-		if (newTime + 10 > currentTime){
+		if (newTime > currentTime){
 			console.log("Sending message to bot")
 			event = {'userId': userId}
 			callback(userId, questionId);
