@@ -51,8 +51,6 @@ app.get('/addToWatchList/:userId/:questionId',function(req,res){
     console.log("userId = " + userId + " questionId " + questionId );
     watcher.addWatcher(userId, questionId);
 
-    var date = new Date().toISOString().slice(0, 19).replace('T', ' ');
-
     res.send("Hi, we will be watching the question and notify you if any answers are added");
 });
 
@@ -60,8 +58,6 @@ app.get('/addToWatchList/:userId/:questionId',function(req,res){
 app.get('/upvoteAnswer/:userId/:answerId', function(req, res){
     var userId = req.params.userId;
     var questionId = req.params.answerId;
-
-    var date = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
     res.send('Thank you for upvoting! :)');
 });
