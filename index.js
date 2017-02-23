@@ -20,7 +20,8 @@ var searchUrlAppend = 'search?order=desc&sort=votes&site=stackoverflow&intitle='
 
 var questionAnswerUrlAppend = '?site=stackoverflow&filter=withbody';
 
-var baseUrl = 'https://f1dbdfaf.ngrok.io/';
+// Change this when you deploy locally
+var baseUrl = 'http://3676f534.ngrok.io/';
 
 var app = express();
 app.use(flock.events.tokenVerifier);
@@ -32,6 +33,7 @@ app.listen(8080, function() {
     console.log('Listening on 8080');
 });
 
+// Start the watcher function async
 setTimeout(function(){
     watcher.startWatcher(function(userId, questionId) {
         flock.chat.sendMessage(config.botToken, {
@@ -42,49 +44,46 @@ setTimeout(function(){
 }, 0);
 
 app.get('/addToWatchList/:userId/:questionId',function(req,res){
-    
+
     var userId = req.params.userId;
     var questionId = req.params.questionId;
-    
-    console.log( "userId = " + userId + " questionId " + questionId ); 
+
+    console.log("userId = " + userId + " questionId " + questionId );
     watcher.addWatcher(userId, questionId);
 
-    var date = new Date().toISOString().slice(0, 19).replace('T', ' ');
-
     res.send("Hi, we will be watching the question and notify you if any answers are added");
-    //add_to_watch_list(userId, questionId);
-    
-}); 
+});
 
+// TODO: Unimplemented method
 app.get('/upvoteAnswer/:userId/:answerId', function(req, res){
     var userId = req.params.userId;
     var questionId = req.params.answerId;
-    
-    var date = new Date().toISOString().slice(0, 19).replace('T', ' ');
-    
-    res.send('Thank you for upvoting! :)');
-}); 
 
+    res.send('Thank you for upvoting! :)');
+});
+
+// Return a list of question titles that the user is watching
 app.get('/list',function(req,res){
 
     var event = JSON.parse(req.query.flockEvent);
-    
+
     res.set('Content-Type', 'text/html');
 
     var userId = event.userId;
-    
-    console.log( "userId = " + userId); 
+
+    console.log( "userId = " + userId);
     var watchList = watcher.getWatchList(userId);
 
     var questionTitles = getQuestionTitles(watchList[userId], res);
-}); 
+});
 
+// Given a list of question id's, return a list of the titles of those questions
 function getQuestionTitles(watchList, res) {
-    questionTitles = [];
+    var questionTitles = [];
 
     var questionUrl = url + '/questions/';
     console.log(watchList);
-    
+
     for(var i = 0; i < watchList.length-1; i++) {
         console.log(i);
         var questionId = watchList[i];
@@ -96,18 +95,16 @@ function getQuestionTitles(watchList, res) {
     client.get(questionUrl, function (data, response) {
         console.log("Got question title for watch list!");
         console.log(data);
-        for(i in data.items){
-            console.log("Sunnsunn = " + i ) ; 
-            questionTitles.push(data.items[i].title);
-        }
-        
+
+        questionTitles = data.items.map(function(q) {return q.title})
+
         console.log("questionTitles "  + questionTitles);
         var body = '<html><head></head><body><style>.list-type1{width:400px;margin:0 auto}.list-type1 ol{counter-reset:li;list-style:none;font-size:15px;font-family:Raleway,sans-serif;padding:0;margin-bottom:4em}.list-type1 ol ol{margin:0 0 0 2em}.list-type1 a{position:relative;display:block;padding:.4em .4em .4em 2em;margin:.5em 0;background:#93C775;color:#000;text-decoration:none;-moz-border-radius:.3em;-webkit-border-radius:.3em;border-radius:10em;transition:all .2s ease-in-out}.list-type1 a:hover{background:#d6d4d4;text-decoration:none;transform:scale(1.1)}.list-type1 a:before{content:counter(li);counter-increment:li;position:absolute;left:-1.3em;top:50%;margin-top:-1.3em;background:#93C775;height:2em;width:2em;line-height:2em;border:.3em solid #fff;text-align:center;font-weight:700;-moz-border-radius:2em;-webkit-border-radius:2em;border-radius:2em;color:#FFF} </style><div class="list-type1"><ol>'
-        var end = '</ol></div></body></html>' 
+        var end = '</ol></div></body></html>'
         for (i in questionTitles) {
             body += '<li><a href="https://www.stackoverflow.com/q/' + watchList[i] + '" target="_blank">'+ questionTitles[i] + "</a></li>";
         }
-        body += end ; 
+        body += end;
         console.log(body);
         res.send(body);
     });
@@ -116,7 +113,7 @@ function getQuestionTitles(watchList, res) {
 }
 
 function sendMessageByBot(event, questions) {
-    
+
     var css = ".btn { line-height: 30px;display: inline-block;float:left;width: 200px;text-align: center; cursor:pointer; background: #0abe50; background-image: -webkit-linear-gradient(top, #0abe50, #0abe50); background-image: -moz-linear-gradient(top, #0abe50, #0abe50); background-image: -ms-linear-gradient(top, #0abe50, #0abe50); background-image: -o-linear-gradient(top, #0abe50, #0abe50); background-image: linear-gradient(to bottom, #0abe50, #0abe50); -webkit-border-radius: 0; -moz-border-radius: 0; border-radius: 0px; font-family: Arial; color: #f2f2f2; font-size: 14px; padding: 5px 5px 5px 5px; text-decoration: none; }.btn:hover { background: #5ce08f; background-image: -webkit-linear-gradient(top, #5ce08f, #5ce08f); background-image: -moz-linear-gradient(top, #5ce08f, #5ce08f); background-image: -ms-linear-gradient(top, #5ce08f, #5ce08f); background-image: -o-linear-gradient(top, #5ce08f, #5ce08f); background-image: linear-gradient(to bottom, #5ce08f, #5ce08f); text-decoration: none; }" ;
     var start = '<!DOCTYPE html><html><head><title>Questions</title></head><style>'+css+'</style><body>' ;
     var end = '</body></html>';
@@ -125,10 +122,10 @@ function sendMessageByBot(event, questions) {
 
     questions.forEach(function(e){
 
-        var linkToWatch = baseUrl + 'addToWatchList/' + event.userId + '/'+ e.questionId ; 
+        var linkToWatch = baseUrl + 'addToWatchList/' + event.userId + '/'+ e.questionId ;
 
         e.answers.forEach(function(d){
-            var linkToUpvote = baseUrl + 'upvoteAnswer/' + event.userId + '/' + d.answerId ; 
+            var linkToUpvote = baseUrl + 'upvoteAnswer/' + event.userId + '/' + d.answerId ;
 
             var start = '<!DOCTYPE html><html><head><title>Questions</title></head><style>' + css + '</style><body>';
             start += '<li style="display:inline-block;">' + e.question + '<br><a href="' + linkToWatch + '" class="btn">Watch</a></li><ul>' ;
@@ -143,7 +140,7 @@ function sendMessageByBot(event, questions) {
                             "views": {
                                 "html": { "inline": body, "width" : 400, "height" : 400}
                             }
-                    }]          
+                    }]
             });
         });
     });
@@ -162,7 +159,7 @@ flock.events.on('app.install', function (event, callback) {
 
 flock.events.on('client.slashCommand', function (event, callback) {
 
-    var commandText = event.text; 
+    var commandText = event.text;
     console.log("Whole command is " + commandText);
 
     var searchUrl = url + searchUrlAppend + encodeURIComponent(commandText.trim());
@@ -192,7 +189,7 @@ flock.events.on('client.slashCommand', function (event, callback) {
             question['question'] = questionTitle;
             question['questionId'] = questionId;
 
-            console.log("Question Title - " + questionTitle); 
+            console.log("Question Title - " + questionTitle);
 
             var answerUrl = url + '/questions/' + questionId + '/answers' + questionAnswerUrlAppend;
 
@@ -209,7 +206,7 @@ flock.events.on('client.slashCommand', function (event, callback) {
                 console.log("===========================");
                 questions.push(question);
                 console.log(JSON.stringify(questions));
-                
+
                 sendMessageByBot(event, questions);
             });
         });
