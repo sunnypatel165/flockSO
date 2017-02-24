@@ -1,3 +1,5 @@
+'use strict';
+
 var Client = require('node-rest-client').Client;
 var client = new Client();
 
@@ -9,76 +11,72 @@ var url = 'https://api.stackexchange.com/2.2/';
 var questionAnswerUrlAppend = '?site=stackoverflow';
 
 function getLastActivityTime(questionId) {
-	var questionUrl = url + '/questions/' + questionId + questionAnswerUrlAppend;
+    var questionUrl = url + '/questions/' + questionId + questionAnswerUrlAppend;
 
-	console.log(questionUrl);
+    console.log(questionUrl);
 
-	var lastActivityDate = 0;
+    var lastActivityDate = 0;
 
     client.get(questionUrl, function (data, response) {
-    	lastActivityDate = data.items[0].last_activity_date;
-        console.log("Last Activity Date - " + lastActivityDate); 
+        lastActivityDate = data.items[0].last_activity_date;
+        console.log("Last Activity Date - " + lastActivityDate);
     });
 
     return lastActivityDate;
 }
 
 function checkForUpdates(callback) {
-	console.log("Checking for updates");
-	
-	console.log(watcher);
+    console.log("Checking for updates");
 
-	for(toWatchObj in watcher) {
-		currentTime = watcher[toWatchObj];
-	
-		console.log(toWatchObj);
+    console.log(watcher);
 
-		var questionId = toWatchObj.split(",")[1];
-		var userId = toWatchObj.split(",")[0];
+    for(toWatchObj in watcher) {
+        currentTime = watcher[toWatchObj];
 
-		console.log("Question id: " + questionId);
+        console.log(toWatchObj);
 
-		var newTime = getLastActivityTime(questionId);
+        var questionId = toWatchObj.split(",")[1];
+        var userId = toWatchObj.split(",")[0];
 
-		console.log("Current known last activity time: " + currentTime);
+        console.log("Question id: " + questionId);
 
-		if (newTime > currentTime){
-			console.log("Sending message to bot")
-			event = {'userId': userId}
-			callback(userId, questionId);
-			watcher[questionId] =  newTime;
-		}
-	}
+        var newTime = getLastActivityTime(questionId);
+
+        console.log("Current known last activity time: " + currentTime);
+
+        if (newTime > currentTime){
+            console.log("Sending message to bot")
+            event = {'userId': userId}
+            callback(userId, questionId);
+            watcher[questionId] =  newTime;
+        }
+    }
 }
 
 module.exports = {
 
-	getWatchList: function(userId){
-		console.log("Inside getWatchList");
-		var map = {};
-		for(toWatchObj in watcher) {
-			currentTime = watcher[toWatchObj];
-	
-			console.log(toWatchObj);
+    getWatchList: function(userId){
+        console.log("Inside getWatchList");
+        var watchedQuestions = [];
+        for(var toWatchObj in watcher) {
+            console.log(toWatchObj);
 
-			var questionId = toWatchObj.split(",")[1];
-			var userId = toWatchObj.split(",")[0];
+            var questionId = toWatchObj.split(",")[1];
+            var watchingUserId = toWatchObj.split(",")[0];
 
-			if(!(userId in map)){
-				map[userId]=[];
-			}
-			map[userId].push(questionId);
-			
-		}
-		return map;
-	},
-	addWatcher: function (userId, questionId) {
-		console.log("Now watching for userId = " + userId + ", questionId = " + questionId);
-		watcher[[userId, questionId]] = getLastActivityTime(questionId);
-	},
+            if (watchingUserId === userId){
+                watchedQuestions.push(questionId);
+            }
+        }
+        return watchedQuestions;
+    },
+    addWatcher: function (userId, questionId) {
+        console.log("Now watching for userId = " + userId + ", questionId = " + questionId);
+        watcher[[userId, questionId]] = getLastActivityTime(questionId);
+    },
 
-	startWatcher: function (callback) {
-		console.log("Starting watcher");
-		setInterval(function(){checkForUpdates(callback);}, 300000);
-	}
+    startWatcher: function (callback) {
+        console.log("Starting watcher");
+        setInterval(function(){checkForUpdates(callback);}, 300000);
+    }
 };
