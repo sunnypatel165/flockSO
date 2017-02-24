@@ -1,4 +1,4 @@
-# flockSO
+# flockSO - StackOverflow for FlockOS!
 
 FlockSO is a product created at the Flock Hackathon - Flockathon, to be precise - hosted at their office on 18-19th Feb 2017.
 It was a hackathon to get developers to create apps that make lives easy - of developers, teams and people in general. 
