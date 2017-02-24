@@ -22,6 +22,8 @@ We also tried to use as many features of FlockOS as possible.
 * [Watch](https://github.com/sunnypatel165/flockSO/blob/master/watcher.js) - The user can also add a question to the watch list. Whenever there is a change(a new answer, a new accepted answer, comment, change of question etc), your friend - Bot comes and updates you about any activity that happened on the app!
 * [App launcher button](https://docs.flock.co/display/flockos/Launcher+Buttons) - to show the user a list of all the questions he is watching - and obviously to un-watch them(WIP)!
 
+PS - Any one willing to contribute to make this app live and finish all WIPs - I owe you a :beer:
+
 
 
 
