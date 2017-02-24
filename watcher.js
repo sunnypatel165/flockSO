@@ -10,6 +10,9 @@ var watcher = {};
 var url = 'https://api.stackexchange.com/2.2/';
 var questionAnswerUrlAppend = '?site=stackoverflow';
 
+// This is the frequency at which we check for updates on the watcher
+var updateIntervalInMilliseconds = 300000;
+
 function getLastActivityTime(questionId) {
     var questionUrl = url + '/questions/' + questionId + questionAnswerUrlAppend;
 
@@ -17,6 +20,8 @@ function getLastActivityTime(questionId) {
 
     var lastActivityDate = 0;
 
+    // TODO: This call is not blocking!
+    // We need to use either futures/promises
     client.get(questionUrl, function (data, response) {
         lastActivityDate = data.items[0].last_activity_date;
         console.log("Last Activity Date - " + lastActivityDate);
@@ -45,8 +50,11 @@ function checkForUpdates(callback) {
         console.log("Current known last activity time: " + currentTime);
 
         if (newTime > currentTime){
-            console.log("Sending message to bot")
-            event = {'userId': userId}
+            console.log("There has been new activity on question " + questionId);
+
+            // We call callback first because we want the user to be notified first
+            // If we update the watcher, but the notification fails, the user will never know
+            // that the question was updated!
             callback(userId, questionId);
             watcher[questionId] =  newTime;
         }
@@ -70,13 +78,15 @@ module.exports = {
         }
         return watchedQuestions;
     },
-    addWatcher: function (userId, questionId) {
+    addWatcher: function(userId, questionId) {
         console.log("Now watching for userId = " + userId + ", questionId = " + questionId);
         watcher[[userId, questionId]] = getLastActivityTime(questionId);
     },
 
     startWatcher: function (callback) {
         console.log("Starting watcher");
-        setInterval(function(){checkForUpdates(callback);}, 300000);
+        setInterval(function() {
+            checkForUpdates(callback);
+        }, updateIntervalInMilliseconds);
     }
 };
