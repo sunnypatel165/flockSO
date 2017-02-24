@@ -5,7 +5,7 @@ It was a hackathon to get developers to create apps that make lives easy - of de
 
 As developer who is your best friend after Google? Yes - StackOverflow.
 
-This was a combined effort of 24 hours by @havanagrawal, @sunnyshah2894, @ak1132 and me!
+This was a combined effort of 24 hours by [@havanagrawal](https://github.com/havanagrawal), [@sunnyshah2894](https://github.com/sunnyshah2894), [@ak1132](https://github.com/ak1132) and me!
 
 ## Stack details:
 1. Node backend - watcher, services and everything else.
