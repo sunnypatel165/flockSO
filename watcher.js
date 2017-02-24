@@ -30,8 +30,8 @@ function checkForUpdates(callback) {
 
     console.log(watcher);
 
-    for(toWatchObj in watcher) {
-        currentTime = watcher[toWatchObj];
+    for(var toWatchObj in watcher) {
+        var currentTime = watcher[toWatchObj];
 
         console.log(toWatchObj);
 
