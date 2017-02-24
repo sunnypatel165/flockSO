@@ -1,3 +1,5 @@
+'use strict';
+
 var config = require('./config.js');
 var flock = require('flockos');
 var express = require('express');
@@ -74,7 +76,7 @@ app.get('/list',function(req,res){
     console.log( "userId = " + userId);
     var watchList = watcher.getWatchList(userId);
 
-    var questionTitles = getQuestionTitles(watchList[userId], res);
+    var questionTitles = getQuestionTitles(watchList, res);
 });
 
 // Given a list of question id's, return a list of the titles of those questions
@@ -127,11 +129,11 @@ function sendMessageByBot(event, questions) {
         e.answers.forEach(function(d){
             var linkToUpvote = baseUrl + 'upvoteAnswer/' + event.userId + '/' + d.answerId ;
 
-            var start = '<!DOCTYPE html><html><head><title>Questions</title></head><style>' + css + '</style><body>';
-            start += '<li style="display:inline-block;">' + e.question + '<br><a href="' + linkToWatch + '" class="btn">Watch</a></li><ul>' ;
-            start += '<div><code>' + d.answer + '</code></div>' ;
-            start += '</ul><br><a href="' + linkToUpvote +'" class="btn">Upvote this answer</a>' + end;
-            body = start;
+            var body = '<!DOCTYPE html><html><head><title>Questions</title></head><style>' + css + '</style><body>';
+            body += '<li style="display:inline-block;">' + e.question + '<br><a href="' + linkToWatch + '" class="btn">Watch</a></li><ul>' ;
+            body += '<div><code>' + d.answer + '</code></div>' ;
+            body += '</ul><br><a href="' + linkToUpvote +'" class="btn">Upvote this answer</a>' + end;
+
             console.log(body);
             flock.chat.sendMessage(config.botToken, {
                 to: event.userId,
