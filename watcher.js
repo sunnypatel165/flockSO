@@ -1,3 +1,5 @@
+'use strict';
+
 var Client = require('node-rest-client').Client;
 var client = new Client();
 
@@ -8,77 +10,83 @@ var watcher = {};
 var url = 'https://api.stackexchange.com/2.2/';
 var questionAnswerUrlAppend = '?site=stackoverflow';
 
+// This is the frequency at which we check for updates on the watcher
+var updateIntervalInMilliseconds = 300000;
+
 function getLastActivityTime(questionId) {
-	var questionUrl = url + '/questions/' + questionId + questionAnswerUrlAppend;
+    var questionUrl = url + '/questions/' + questionId + questionAnswerUrlAppend;
 
-	console.log(questionUrl);
+    console.log(questionUrl);
 
-	var lastActivityDate = 0;
+    var lastActivityDate = 0;
 
+    // TODO: This call is not blocking!
+    // We need to use either futures/promises
     client.get(questionUrl, function (data, response) {
-    	lastActivityDate = data.items[0].last_activity_date;
-        console.log("Last Activity Date - " + lastActivityDate); 
+        lastActivityDate = data.items[0].last_activity_date;
+        console.log("Last Activity Date - " + lastActivityDate);
     });
 
     return lastActivityDate;
 }
 
 function checkForUpdates(callback) {
-	console.log("Checking for updates");
-	
-	console.log(watcher);
+    console.log("Checking for updates");
 
-	for(toWatchObj in watcher) {
-		currentTime = watcher[toWatchObj];
-	
-		console.log(toWatchObj);
+    console.log(watcher);
 
-		var questionId = toWatchObj.split(",")[1];
-		var userId = toWatchObj.split(",")[0];
+    for(var toWatchObj in watcher) {
+        var currentTime = watcher[toWatchObj];
 
-		console.log("Question id: " + questionId);
+        console.log(toWatchObj);
 
-		var newTime = getLastActivityTime(questionId);
+        var questionId = toWatchObj.split(",")[1];
+        var userId = toWatchObj.split(",")[0];
 
-		console.log("Current known last activity time: " + currentTime);
+        console.log("Question id: " + questionId);
 
-		if (newTime > currentTime){
-			console.log("Sending message to bot")
-			event = {'userId': userId}
-			callback(userId, questionId);
-			watcher[questionId] =  newTime;
-		}
-	}
+        var newTime = getLastActivityTime(questionId);
+
+        console.log("Current known last activity time: " + currentTime);
+
+        if (newTime > currentTime){
+            console.log("There has been new activity on question " + questionId);
+
+            // We call callback first because we want the user to be notified first
+            // If we update the watcher, but the notification fails, the user will never know
+            // that the question was updated!
+            callback(userId, questionId);
+            watcher[questionId] =  newTime;
+        }
+    }
 }
 
 module.exports = {
 
-	getWatchList: function(userId){
-		console.log("Inside getWatchList");
-		var map = {};
-		for(toWatchObj in watcher) {
-			currentTime = watcher[toWatchObj];
-	
-			console.log(toWatchObj);
+    getWatchList: function(userId){
+        console.log("Inside getWatchList");
+        var watchedQuestions = [];
+        for(var toWatchObj in watcher) {
+            console.log(toWatchObj);
 
-			var questionId = toWatchObj.split(",")[1];
-			var userId = toWatchObj.split(",")[0];
+            var questionId = toWatchObj.split(",")[1];
+            var watchingUserId = toWatchObj.split(",")[0];
 
-			if(!(userId in map)){
-				map[userId]=[];
-			}
-			map[userId].push(questionId);
-			
-		}
-		return map;
-	},
-	addWatcher: function (userId, questionId) {
-		console.log("Now watching for userId = " + userId + ", questionId = " + questionId);
-		watcher[[userId, questionId]] = getLastActivityTime(questionId);
-	},
+            if (watchingUserId === userId){
+                watchedQuestions.push(questionId);
+            }
+        }
+        return watchedQuestions;
+    },
+    addWatcher: function(userId, questionId) {
+        console.log("Now watching for userId = " + userId + ", questionId = " + questionId);
+        watcher[[userId, questionId]] = getLastActivityTime(questionId);
+    },
 
-	startWatcher: function (callback) {
-		console.log("Starting watcher");
-		setInterval(function(){checkForUpdates(callback);}, 300000);
-	}
+    startWatcher: function (callback) {
+        console.log("Starting watcher");
+        setInterval(function() {
+            checkForUpdates(callback);
+        }, updateIntervalInMilliseconds);
+    }
 };
