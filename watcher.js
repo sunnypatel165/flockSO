@@ -1,11 +1,39 @@
 'use strict';
 
+var fs = require('fs');
 var Client = require('node-rest-client').Client;
 var client = new Client();
 
+var dbFile = 'watcherDb.json';
+
+// Functions for persistence
+var watcherDatabase = {
+    read: function(dbFilePath) {
+        try {
+            var stringContent = fs.readFileSync(dbFilePath);
+            var watcherState = JSON.parse(stringContent);
+            return watcherState;
+        } catch (e) {
+            console.log('No db found, initializing to empty state');
+            return {};
+        }
+    },
+
+    save: function(watcherState, dbFilePath) {
+        console.log('Saving watchers to db');
+        var stringContent = JSON.stringify(watcherState);
+        fs.writeFileSync(dbFilePath, stringContent);
+    }
+}
+
 // Keys are stringified userId-questionId pairs
 // Values are the last activity time
-var watcher = {};
+var watcher = watcherDatabase.read(dbFile);
+
+// Save the watcher state on exit/interrups
+process.on('SIGINT', function () { console.log('SIGINT'); process.exit(); });
+process.on('SIGTERM', function () { console.log('SIGTERM'); process.exit(); });
+process.on('exit', function() { watcherDatabase.save(watcher, dbFile) });
 
 var url = 'https://api.stackexchange.com/2.2/';
 var questionAnswerUrlAppend = '?site=stackoverflow';
@@ -23,8 +51,13 @@ function getLastActivityTime(questionId) {
     // TODO: This call is not blocking!
     // We need to use either futures/promises
     client.get(questionUrl, function (data, response) {
-        lastActivityDate = data.items[0].last_activity_date;
-        console.log("Last Activity Date - " + lastActivityDate);
+        if (!(data.items == null)) {
+            lastActivityDate = data.items[0].last_activity_date;
+            console.log("Last Activity Date - " + lastActivityDate);
+        }
+        else {
+            console.log("Unable to retrieve last activity date details for " + questionId);
+        }
     });
 
     return lastActivityDate;
@@ -63,6 +96,7 @@ function checkForUpdates(callback) {
 
 module.exports = {
 
+    // For a given userId, get a list of all the questionIds that he/she is watching
     getWatchList: function(userId){
         console.log("Inside getWatchList");
         var watchedQuestions = [];
@@ -78,11 +112,15 @@ module.exports = {
         }
         return watchedQuestions;
     },
+
+    // Add a question id to the watchlist of a particular user
     addWatcher: function(userId, questionId) {
         console.log("Now watching for userId = " + userId + ", questionId = " + questionId);
         watcher[[userId, questionId]] = getLastActivityTime(questionId);
     },
 
+    // Start the watcher thread
+    // Intermittently check for updates on all watched questions
     startWatcher: function (callback) {
         console.log("Starting watcher");
         setInterval(function() {
