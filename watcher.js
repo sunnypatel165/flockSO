@@ -119,6 +119,10 @@ module.exports = {
         watcher[[userId, questionId]] = getLastActivityTime(questionId);
     },
 
+    //Remoec a question id from the watchlust of a particular user
+    removeWatcher: function(userId, questionId) {
+        delete watcher[[userId, questionId]];
+    },
     // Start the watcher thread
     // Intermittently check for updates on all watched questions
     startWatcher: function (callback) {

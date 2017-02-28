@@ -75,12 +75,24 @@ app.get('/list',function(req,res){
     console.log( "userId = " + userId);
     var watchList = watcher.getWatchList(userId);
 
-    var questionTitles = getQuestionTitles(watchList, res);
+    var questionTitles = getQuestionTitles(watchList, userId, res);
+});
+
+app.get('/removeFromWatchList/:userId/:questionId',function(req,res){
+
+    var userId = req.params.userId;
+    var questionId = req.params.questionId;
+
+    console.log(" Unwatching: userId = " + userId + " questionId " + questionId );
+    watcher.removeWatcher(userId, questionId);
+
+    res.send("Hi, you have unwatched the question, you will no longer be notified about the changes.");
 });
 
 // Given a list of question id's, return a list of the titles of those questions
-function getQuestionTitles(watchList, res) {
-    var questionTitles = [];
+function getQuestionTitles(watchList, userId, res) {
+    var questionTitles = []; 
+    var unwatchUrls = [];
 
     var questionUrl = url + '/questions/';
     console.log(watchList);
@@ -89,10 +101,17 @@ function getQuestionTitles(watchList, res) {
         console.log(i);
         var questionId = watchList[i];
         questionUrl = questionUrl + questionId + ';' ;
+        var linkToUnWatch = baseUrl + 'removeFromWatchList/' + userId + '/' + questionId;
+        unwatchUrls[questionId] = linkToUnWatch;
     }
 
-    questionUrl = questionUrl + watchList[watchList.length - 1]+questionAnswerUrlAppend;
+    var lastQuestionId = watchList[watchList.length - 1];
+    questionUrl = questionUrl + lastQuestionId +questionAnswerUrlAppend;
+    unwatchUrls[lastQuestionId] = baseUrl  + 'removeFromWatchList/' +  userId + '/'  + lastQuestionId ;
+
     console.log(questionUrl);
+    console.log(unwatchUrls);
+
     client.get(questionUrl, function (data, response) {
         console.log("Got question title for watch list!");
         console.log(data);
@@ -103,7 +122,9 @@ function getQuestionTitles(watchList, res) {
         var body = '<html><head></head><body><style>.list-type1{width:400px;margin:0 auto}.list-type1 ol{counter-reset:li;list-style:none;font-size:15px;font-family:Raleway,sans-serif;padding:0;margin-bottom:4em}.list-type1 ol ol{margin:0 0 0 2em}.list-type1 a{position:relative;display:block;padding:.4em .4em .4em 2em;margin:.5em 0;background:#93C775;color:#000;text-decoration:none;-moz-border-radius:.3em;-webkit-border-radius:.3em;border-radius:10em;transition:all .2s ease-in-out}.list-type1 a:hover{background:#d6d4d4;text-decoration:none;transform:scale(1.1)}.list-type1 a:before{content:counter(li);counter-increment:li;position:absolute;left:-1.3em;top:50%;margin-top:-1.3em;background:#93C775;height:2em;width:2em;line-height:2em;border:.3em solid #fff;text-align:center;font-weight:700;-moz-border-radius:2em;-webkit-border-radius:2em;border-radius:2em;color:#FFF} </style><div class="list-type1"><ol>'
         var end = '</ol></div></body></html>'
         for (i in questionTitles) {
-            body += '<li><a href="https://www.stackoverflow.com/q/' + watchList[i] + '" target="_blank">'+ questionTitles[i] + "</a></li>";
+            body += '<li><a href="https://www.stackoverflow.com/q/' + watchList[i] + '" target="_blank">'+ questionTitles[i] + "</a>";
+            body += '<a href="' + unwatchUrls[watchList[i]] +'" >Unwatch this question</a>' ;
+            body += '</li>'
         }
         body += end;
         console.log(body);
