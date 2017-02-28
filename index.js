@@ -3,7 +3,6 @@
 var config = require('./config.js');
 var flock = require('flockos');
 var express = require('express');
-var store = require('./store.js');
 var chrono = require('chrono-node');
 var Mustache = require('mustache');
 var fs = require('fs');
@@ -23,7 +22,7 @@ var searchUrlAppend = 'search?order=desc&sort=votes&site=stackoverflow&intitle='
 var questionAnswerUrlAppend = '?site=stackoverflow&filter=withbody';
 
 // Change this when you deploy locally
-var baseUrl = 'http://3676f534.ngrok.io/';
+var baseUrl = 'https://6dec20c0.ngrok.io/';
 
 var app = express();
 app.use(flock.events.tokenVerifier);
@@ -154,8 +153,6 @@ flock.events.on('app.install', function (event, callback) {
             to: event.userId,
             text: "Welcome to the FlockSo app! FlockSo is StackOverflow for FlockOs"
     });
-
-    store.saveToken(event.userId, event.token);
     callback();
 });
 
