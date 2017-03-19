@@ -7,6 +7,7 @@ var chrono = require('chrono-node');
 var Mustache = require('mustache');
 var fs = require('fs');
 var util = require('util');
+var request = require('request');
 var Client = require('node-rest-client').Client;
 var client = new Client();
 
